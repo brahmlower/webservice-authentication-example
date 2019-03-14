@@ -1,0 +1,20 @@
+
+<html>
+    <body>
+        <h2 id='greeting'>Welcome Home!</h2>
+        <p> You can <a href="#" onclick="signOut();">Sign out</a> here </p>
+        <script>
+            function signOut() {
+                var auth2 = gapi.auth2.getAuthInstance();
+                auth2.signOut().then(function () {
+                    console.log('User signed out.');
+                });
+            }
+
+            (function() {
+                var greeting_div = document.getElementById('greeting');
+                greeting_div.innerHTML = "Welcome Home "+localStorage.getItem('name');
+            })();
+        </script>
+    </body>
+</html>

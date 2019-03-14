@@ -1,0 +1,34 @@
+
+version: '3.1'
+
+services:
+  # buildings:
+  #   build:
+  #     context: .
+  #     dockerfile: dockerfile
+  #   image: buildings-api
+  #   volumes:
+  #     - ./settings.yml:/app/settings.yml:ro
+  #   depends_on:
+  #     - db
+  #   ports:
+  #     - "8000:8000"
+  # web-ui:
+  #   build:
+  #     context: buildings-ui
+  #     dockerfile: dockerfile
+  #   image: buildings-ui
+  #   depends_on:
+  #     - api-python
+  #     - api-php
+  #   ports:
+  #     - "8000:8000"
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: buildings-db
+      POSTGRES_USER: buildings-user
+      POSTGRES_PASSWORD: buildings-password
+    ports:
+      - 5432:5432

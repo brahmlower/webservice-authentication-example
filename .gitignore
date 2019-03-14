@@ -1,0 +1,7 @@
+*.egg-info
+venv
+__pycache__
+dist
+settings.example.yml
+credentials.json
+.vscode

@@ -1,0 +1,13 @@
+db:
+  hostname: localhost
+  database: buildings-db
+  username: buildings-user
+  password: buildings-password
+  port: 5432
+auth:
+  jwt:
+    secret: buttsbuttsbutts
+    algo: HS256
+  backends:
+    google:
+      client_id: 707989048789-cnbimfp18p0547hptm4af4p6sphe5e10.apps.googleusercontent.com
