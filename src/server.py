@@ -16,14 +16,12 @@ from . import data_access
 
 class BuildingsApi(Flask):
     def __init__(self, app_config):
-        super().__init__(__name__)
-        # Register the routes and their handlers
-        self.route('/')(self.index)
-        self.route('/login')(self.login)
-        self.route('/logout')(self.logout)
-        self.route('/home')(self.home)
-        self.route('/signup')(self.signup)
+        super().__init__(__name__, static_folder=None)
+        # Dummy static routes
         self.route('/static/<path:path>')(self.send_static)
+        self.route('/<path:path>')(self.index)
+        self.route('/')(self.index)
+        # API routes
         self.route('/api/')(self.api_index)
         self.route('/api/signup', methods=['POST'])(self.api_signup)
         self.route('/api/auth', methods=['POST'])(self.api_auth)
@@ -37,73 +35,20 @@ class BuildingsApi(Flask):
         self.Session = sessionmaker()
         self.Session.configure(bind=self.db.engine)
 
-        # self.db.Model.metadata.reflect(self.db.engine)
-        # Connect to the database and create our connection pool
-        # try:
-        #     self.db_pool = self._init_db_pool()
-        # except Exception as e:
-        #     sys.exit("Failed to connect to database: {}".format(e))
-
     def _get_db_uri(self):
-        database = self.app_config['db']['database']
-        username = self.app_config['db']['username']
-        password = self.app_config['db']['password']
-        hostname = self.app_config['db']['hostname']
-        port = self.app_config['db']['port']
         return "postgresql://{username}:{password}@{hostname}:{port}/{database}".format(
-            username=username,
-            password=password,
-            hostname=hostname,
-            database=database,
-            port=port
+            username=self.app_config['db']['username'],
+            password=self.app_config['db']['password'],
+            hostname=self.app_config['db']['hostname'],
+            database=self.app_config['db']['database'],
+            port=self.app_config['db']['port']
         )
 
-    # def _init_db_pool(self):
-    #     database = self.app_config['db']['database']
-    #     username = self.app_config['db']['username']
-    #     password = self.app_config['db']['password']
-    #     hostname = self.app_config['db']['hostname']
-    #     port = self.app_config['db']['port']
-    #     db_pool = ThreadedConnectionPool(1, 20, database=database,
-    #         user=username, password=password, host=hostname, port=port)
-    #     return db_pool
-
-    # @contextmanager
-    # def _get_db_connection(self):
-    #     try:
-    #         connection = self.db_pool.getconn()
-    #         yield connection
-    #     finally:
-    #         self.db_pool.putconn(connection)
-
-    # @contextmanager
-    # def _get_db_cursor(self, commit=False):
-    #     with self._get_db_connection() as connection:
-    #         cursor = connection.cursor(cursor_factory=RealDictCursor)
-    #         try:
-    #             yield cursor
-    #             if commit:
-    #                 connection.commit()
-    #         finally:
-    #             cursor.close()
-
-    def index(self):
+    def index(self, path=None):
         return send_from_directory('static', 'index.html')
 
-    def login(self):
-        return send_from_directory('static', 'login.html')
-
-    def signup(self):
-        return send_from_directory('static', 'signup.html')
-
-    def logout(self):
-        return send_from_directory('static', 'logout.html')
-
-    def home(self):
-        return send_from_directory('static', 'home.html')
-
     def send_static(self, path):
-        return send_from_directory('static', path)
+        return send_from_directory('static/static', path)
 
     def api_index(self):
         content = json.dumps({'message': 'Hello world!'})
@@ -259,7 +204,6 @@ class BuildingsApi(Flask):
     def _get_auth_jwt(self, session, account_id):
         jwt_secret = self.app_config['auth']['jwt']['secret']
         jwt_algo = self.app_config['auth']['jwt']['algo']
-        # print('building jwt for account_id: {}'.format(account_id))
         account = data_access.account_get_by_id(session, account_id)
         if account is None:
             raise Exception('account with id {} not found'.format(account_id))
