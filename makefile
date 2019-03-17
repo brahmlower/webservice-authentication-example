@@ -6,6 +6,9 @@ DB_PASS = buildings-password
 
 .PHONY: run
 run:
+	rm -rf src/static
+	cd frontend && npm run build
+	cp -r frontend/build src/static
 	gunicorn --reload --bind 0.0.0.0:8000 'src:build_app()'
 
 .PHONY: test-lint
