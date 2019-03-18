@@ -1,11 +1,13 @@
 import React, { Component } from 'react'
 import { Button, Container, Row, Card } from 'react-bootstrap';
+import { Redirect } from 'react-router-dom';
 import { GoogleButton } from '../components/GoogleButton.js';
 import { TwitterButton } from '../components/TwitterButton.js';
 import { FacebookButton } from '../components/FacebookButton.js';
 import { GithubButton } from '../components/GithubButton.js';
 import { BuildingsLoginForm } from '../components/StandaloneLoginForm.js';
 import { LoginPanelDisplay } from '../models/Auth.js';
+import { isAuthed } from '../Common.js';
 
 class MethodSelection extends Component {
   render () {
@@ -13,12 +15,12 @@ class MethodSelection extends Component {
     let authCallback = this.props.authSuccessCallback
     return (
       <div>
-        <GoogleButton label="Login via Google" disabled={false} authSuccessCallback={authCallback} />
-        <TwitterButton label="Login via Twitter" disabled={true} authSuccessCallback={authCallback} />
-        <FacebookButton label="Login via Facebook" disabled={true} authSuccessCallback={authCallback} />
-        <GithubButton label="Login via Github" disabled={true} authSuccessCallback={authCallback} />
+        <GoogleButton label="With Google" disabled={false} authSuccessCallback={authCallback} />
+        <TwitterButton label="With Twitter" disabled={true} authSuccessCallback={authCallback} />
+        <FacebookButton label="With Facebook" disabled={true} authSuccessCallback={authCallback} />
+        <GithubButton label="With Github" disabled={true} authSuccessCallback={authCallback} />
         <hr />
-        <Button variant="outline-secondary" onClick={buildingsFn} block> Login via Buildings API</Button>
+        <Button variant="outline-secondary" onClick={buildingsFn} block> With Buildings API</Button>
       </div>
     )
   }
@@ -35,7 +37,9 @@ class LoginPanel extends Component {
   }
 
   onAuthSuccess (response) {
-    console.log("Page level auth response handler: ", response)
+    console.log("Page level auth callback got successful response!")
+    localStorage.setItem('token', response.token);
+    this.forceUpdate();
   }
 
   setView (view) {
@@ -43,6 +47,9 @@ class LoginPanel extends Component {
   }
 
   render() {
+    if (isAuthed() === true) {
+      return <Redirect to='/home' />
+    }
     if (this.state.panel === LoginPanelDisplay.BUILDINGS) {
       return <BuildingsLoginForm authSuccessCallback={this.onAuthSuccess} nav={this.setView} />;
     } else {
@@ -53,8 +60,7 @@ class LoginPanel extends Component {
 
 class PageLogin extends Component {
   render () {
-    return (
-      <Container>
+    return (<Container>
         <br />
         <br />
         <br />
