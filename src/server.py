@@ -235,9 +235,11 @@ class BuildingsApi(Flask):
             return (False, None)
 
     def api_buildings(self):
+        session = self.Session(autocommit=True)
         buildings = data_access.buildings_all(session)
         return Response(str(buildings), mimetype='application/json')
 
     def api_building_get(self, building_id):
+        session = self.Session(autocommit=True)
         building = data_access.buildings_get(session, building_id)
         return Response(str(building), mimetype='application/json')
