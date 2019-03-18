@@ -1,0 +1,36 @@
+
+.bg-custom {
+    background-color: #f3ac49
+}
+
+.jumbotronImg {
+    display: inline-block;
+    clip-path: circle(50% at 50% 50%);
+}
+
+#buildingImg {
+    z-index: 2;
+    position: relative;
+    background-color: #d5edf6;
+    transition: .4s;
+    transition-delay: .3s;
+    clip-path: polygon(0% 0%, 0% 100%, 25% 100%, 100% 25%, 100% 0%);
+}
+
+#buildingImg:hover {
+    transition: .4s;
+    clip-path: polygon(0% 0%, 0% 100%, 50% 100%, 100% 50%, 100% 0%);
+}
+
+#codeImg:hover + #buildingImg {
+    transition: .4s;
+    clip-path: polygon(0% 0%, 0% 100%, 0% 50%, 50% 0%,  100% 0%);
+}
+
+#codeImg {
+    z-index: 1;
+    top: 0;
+    position: absolute;
+    background-color: #a5d9e9;
+    transition: 1s;
+}
