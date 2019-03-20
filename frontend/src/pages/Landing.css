@@ -14,17 +14,17 @@
     background-color: #d5edf6;
     transition: .4s;
     transition-delay: .3s;
-    clip-path: polygon(0% 0%, 0% 100%, 25% 100%, 100% 25%, 100% 0%);
+    clip-path: polygon(-500px 0px, 0px 500px, 500px 0px, 0px -500px);
 }
 
 #buildingImg:hover {
     transition: .4s;
-    clip-path: polygon(0% 0%, 0% 100%, 50% 100%, 100% 50%, 100% 0%);
+    clip-path: polygon(-500px 0px, 50px 550px, 550px 50px, 0px -500px);
 }
 
 #codeImg:hover + #buildingImg {
     transition: .4s;
-    clip-path: polygon(0% 0%, 0% 100%, 0% 50%, 50% 0%,  100% 0%);
+    clip-path: polygon(-500px 0px, -150px 350px, 350px -150px, 0px -500px);
 }
 
 #codeImg {
