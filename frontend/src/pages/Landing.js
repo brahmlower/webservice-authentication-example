@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { Link } from 'react-router-dom';
 import { Jumbotron, Container, Button, Nav, Navbar } from 'react-bootstrap';
 import './Landing.css';
 
@@ -20,22 +21,24 @@ class PageLanding extends Component {
     return (
       <div>
         <Navbar bg="custom" variant="light">
-          <Navbar.Brand href="/">BuildingsAPI</Navbar.Brand>
+          <Navbar.Brand href="/"><i class="far fa-building" /> BuildingsAPI</Navbar.Brand>
           <Navbar.Collapse>
             <Nav className="mr-auto">
-              <Nav.Link href="/home">Home</Nav.Link>
-              <Nav.Link href="/casestudy">Case Study</Nav.Link>
-              <Nav.Link href="/about">About</Nav.Link>
+              {/* <Nav.Link href="/home">
+                <Link to="/home">Login</Link>
+              </Nav.Link> */}
+              <Nav.Link><Link to="/casestudy">Case Study</Link></Nav.Link>
+              <Nav.Link><Link to="/about">About</Link></Nav.Link>
             </Nav>
-            <Button variant="outline-secondary" style={{marginRight: 8}}>Login</Button>
-            <Button variant="outline-primary">Sign Up</Button>
+            <Button variant="outline-secondary" style={{marginRight: 8}}><Link to="/login">Login</Link></Button>
+            <Button variant="outline-primary"><Link to="/signup">Sign Up</Link></Button>
           </Navbar.Collapse>
         </Navbar>
         <Jumbotron fluid style={{margin: 0}}>
           <Container>
             <div className="row align-items-center">
               <div className="col-6 mx-auto col-md-6 order-md-2 text-md-left">
-                <h1>BuildingsAPI</h1>
+                <h1><i class="far fa-building" /> BuildingsAPI</h1>
                 <p>
                   This project is to exemplify various authentication mechanisms
                   for webservices, including multiple Oauth sources, 2fa, API
@@ -59,7 +62,7 @@ class PageLanding extends Component {
         <div className="masthead-followup row m-0 border border-white">
           {/* Oauth providers information card */}
           <div className="col-12 col-md-4 p-3 p-md-5 bg-light border border-white text-md-left">
-            <h3>Oauth Implementations</h3>
+            <h3><i class="far fa-address-card" /> Oauth Integration</h3>
             <p>
               This shows examples of integrating Oauth providers into an existing
               standalone authentication mechanism. Current supported Oauth
@@ -68,7 +71,7 @@ class PageLanding extends Component {
           </div>
           {/* 2fa information card */}
           <div className="col-12 col-md-4 p-3 p-md-5 bg-light border border-white text-md-left">
-            <h3>Password Best Practices</h3>
+            <h3><i class="fas fa-key" /> Password Best Practices</h3>
             <p>
               Password storage is a pain in the ass, and always an interesting
               point of observation during data breaches. Proper password storage
@@ -77,7 +80,7 @@ class PageLanding extends Component {
           </div>
           {/* Password storage information */}
           <div className="col-12 col-md-4 p-3 p-md-5 bg-light border border-white text-md-left">
-            <h3>2fa Support</h3>
+            <h3><i class="fas fa-mobile-alt" /> 2fa Support</h3>
             <p>
               Two factor authentication is increasingly important! This project
               incorporates some best practices about 2fa support.

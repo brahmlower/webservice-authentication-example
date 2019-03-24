@@ -20,7 +20,9 @@ class MethodSelection extends Component {
         <FacebookButton label="With Facebook" disabled={true} authSuccessCallback={authCallback} />
         <GithubButton label="With Github" disabled={true} authSuccessCallback={authCallback} />
         <hr />
-        <Button variant="outline-secondary" onClick={buildingsFn} block> With Buildings API</Button>
+        <Button variant="outline-secondary" onClick={buildingsFn} block>
+          <i class="far fa-building" /> With Buildings API
+        </Button>
       </div>
     )
   }
