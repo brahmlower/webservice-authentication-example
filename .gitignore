@@ -5,4 +5,4 @@ dist
 settings.example.yml
 credentials.json
 .vscode
-src/static
+backend/src/static
