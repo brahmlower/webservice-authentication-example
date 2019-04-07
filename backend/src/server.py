@@ -1,18 +1,18 @@
-import sys
 import json
-from contextlib import contextmanager
 from flask import Flask
 from flask import Response
 from flask import request
 from flask import send_from_directory
+# from flask_api.status import HTTP_200_OK
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
-from psycopg2.pool import ThreadedConnectionPool
-from psycopg2.extras import RealDictCursor
-import jwt
 
-from . import auth
-from . import data_access
+from .domain.account import AuthRequest
+from .domain.account import SignupRequest
+from .domain.account import get_auth_jwt
+from .domain.buildings import get_building
+from .domain.buildings import list_buildings
+from .errors import ServiceException
 
 class BuildingsApi(Flask):
     def __init__(self, app_config):
@@ -25,8 +25,8 @@ class BuildingsApi(Flask):
         self.route('/api/')(self.api_index)
         self.route('/api/signup', methods=['POST'])(self.api_signup)
         self.route('/api/auth', methods=['POST'])(self.api_auth)
-        self.route('/api/buildings')(self.api_buildings)
-        self.route('/api/buildings/<building_id>')(self.api_building_get)
+        self.route('/api/buildings')(self.api_list_buildings)
+        self.route('/api/buildings/<building_id>')(self.api_get_building)
         # Read the configuration file
         self.app_config = app_config
         self.config['SQLALCHEMY_DATABASE_URI'] = self._get_db_uri()
@@ -44,202 +44,142 @@ class BuildingsApi(Flask):
             port=self.app_config['db']['port']
         )
 
+# Dummy static routes ----------------------------------------------------------
+
     def index(self, path=None):
         return send_from_directory('static', 'index.html')
 
     def send_static(self, path):
         return send_from_directory('static/static', path)
 
-    def api_index(self):
-        content = json.dumps({'message': 'Hello world!'})
-        return Response(content, mimetype='application/json')
+# Authentication routes --------------------------------------------------------
 
     def api_signup(self):
         """ Endpoint to handle the signup/account creation process
 
-        This endpoints recieves an account creation request, indicating which
-        type of account method to set up. Only one account method can be created
-        on account creation, but other can be created at a later point. Like
-        account authentication, supported methods are 'standalone' and 'google'.
+            This endpoints recieves an account creation request, indicating which
+            type of account method to set up. Only one account method can be created
+            on account creation, but other can be created at a later point. Like
+            account authentication, supported methods are 'standalone' and 'google'.
 
-        Creation request for 'standalone' method:
-        ```
-        {
-            'method': 'standalone',
-            'standalone': {
-                'name': '<user provided name>',
-                'username': '<user provided username>',
-                'password': '<user provided password>'
+            Creation request for 'standalone' method:
+            ```
+            {
+                'method': 'standalone',
+                'standalone': {
+                    'name': '<user provided name>',
+                    'username': '<user provided username>',
+                    'password': '<user provided password>'
+                }
             }
-        }
-        ```
+            ```
 
-        Creation request for 'google' method:
-        ```
-        {
-            'method': 'google',
-            'google': {
-                'token': '<google provided oauth token>',
+            Creation request for 'google' method:
+            ```
+            {
+                'method': 'google',
+                'google': {
+                    'token': '<google provided oauth token>',
+                }
             }
-        }
-        ```
+            ```
         """
-        signup_request = request.get_json()
-        signup_method = signup_request.get('method')
-        signup_handlers = {
-            'standalone': self._api_signup_standalone,
-            'google': self._api_signup_google
-        }
-        # Input sanitisation
-        if signup_method not in signup_handlers.keys():
-            raise Exception
-        if signup_method not in signup_request.keys():
-            raise Exception
-        # Call the requested signup method
-        handler_request = signup_request[signup_method]
-        handler_func = signup_handlers[signup_method]
+        signup_data = request.get_json()
+        jwt_secret = self.app_config['auth']['jwt']['secret']
+        jwt_algo = self.app_config['auth']['jwt']['algo']
         session = self.Session(autoflush=True)
-        (signup_success, account_id) = handler_func(session, handler_request)
-        if signup_success is True:
-            token = self._get_auth_jwt(session, account_id)
-            session.commit()
-            content = {'success': signup_success, 'token': token.decode('utf-8')}
-            return Response(json.dumps(content), mimetype='application/json')
-        else:
+        try:
+            signup_request = SignupRequest.from_dict(signup_data)
+            account_id = signup_request.signup(session, self.app_config)
+            token = get_auth_jwt(session, account_id, jwt_secret, jwt_algo)
+        except ServiceException as error:
             session.rollback()
-            content = {'success': signup_success, 'token': None}
-            return Response(json.dumps(content), mimetype='application/json')
-
-    def _api_signup_google(self, session, signup_data):
-        # Token verification w/ google
-        user_token = signup_data.get('token')
-        if user_token is None:
-            return (False, None)
-        google_client_id = self.app_config['auth']['backends']['google']['client_id']
-        result = auth.verify_google_token(google_client_id, user_token) # TODO: What happens when this fails?
-        # Create base account
-        db_result = data_access.account_base_create(session, result['name'])
-        if db_result is None:
-            return (False, None)
-        # Create google account
-        account_id = db_result['id']
-        db_result = data_access.account_google_create(session, account_id, result['name'], result['email'])
-        if db_result is None:
-            return (False, None)
+            status_code = error.status_code
+            response_dict = {'success': False, 'response': error.as_dict()}
         else:
-            return (True, db_result['account_id'])
-
-    def _api_signup_standalone(self, session, signup_data):
-        name = signup_data.get('name')
-        username = signup_data.get('username')
-        password = signup_data.get('password')
-        if None in [name, username, password]:
-            return (False, None)
-        # Create base account
-        db_result = data_access.account_base_create(session, name)
-        if db_result is None:
-            return (False, None)
-        # Create google account
-        account_id = db_result['id']
-        db_result = data_access.account_standalone_create(session, account_id, username, password)
-        if db_result is not None:
-            return (True, db_result['account_id'])
-        else:
-            return (False, None)
+            session.commit()
+            status_code = 200
+            response_dict = {'success': True, 'response': token}
+        finally:
+            content = json.dumps(response_dict)
+            return Response(content, status=status_code, mimetype='application/json')
 
     def api_auth(self):
         """ Endpoint to handle the process of logging into an account
 
-        The endpoint handles the authentication process for any supported
-        authentication method. Current supported auth methods are 'standalone'
-        and 'google'. Examples for each are as follows:
+            The endpoint handles the authentication process for any supported
+            authentication method. Current supported auth methods are 'standalone'
+            and 'google'. Examples for each are as follows:
 
-        Authentication request for 'standalone' method:
-        ```
-        {
-            'method': 'standalone',
-            'standalone': {
-                'username': '<user provided username>',
-                'password': '<user provided password>'
+            Authentication request for 'standalone' method:
+            ```
+            {
+                'method': 'standalone',
+                'standalone': {
+                    'username': '<user provided username>',
+                    'password': '<user provided password>'
+                }
             }
-        }
-        ```
+            ```
 
-        Authentication request for 'google' method:
-        ```
-        {
-            'method': 'google',
-            'google': {
-                'token': '<google provided oauth token>'
+            Authentication request for 'google' method:
+            ```
+            {
+                'method': 'google',
+                'google': {
+                    'token': '<google provided oauth token>'
+                }
             }
-        }
-        ```
+            ```
         """
-        auth_request = request.get_json()
-        auth_method = auth_request.get('method')
-        auth_handlers = {
-            'standalone': self._api_auth_standalone,
-            'google': self._api_auth_google
-        }
-        # Input sanitisation
-        if auth_method is None:
-            raise Exception('Missing required key: "auth_method"')
-        if auth_method not in auth_handlers.keys():
-            raise Exception('Invalid auth method: {}'.format(auth_method))
-        # Call the requested authentication method
-        handler_request = auth_request[auth_method]
-        handler_func = auth_handlers[auth_method]
-        session = self.Session(autocommit=True) # TODO: CHANGE THIS TO AUTOFLUSH, NOT AUTOCOMMIT
-        (auth_success, account_id) = handler_func(session, handler_request)
-        # Build the return response
-        content = {'success': auth_success}
-        if auth_success is True:
-            # The user has been verified, so we can build an auth token for them now
-            jwt_value = self._get_auth_jwt(session, account_id)
-            content['token'] = jwt_value.decode("utf-8")
-        else:
-            print('Auth failed for method: {}'.format(auth_method))
-        return Response(json.dumps(content), mimetype='application/json')
-
-    def _get_auth_jwt(self, session, account_id):
+        auth_data = request.get_json()
         jwt_secret = self.app_config['auth']['jwt']['secret']
         jwt_algo = self.app_config['auth']['jwt']['algo']
-        account = data_access.account_get_by_id(session, account_id)
-        if account is None:
-            raise Exception('account with id {} not found'.format(account_id))
-        jwt_dict = dict(account)
-        del(jwt_dict['id'])
-        return jwt.encode(jwt_dict, jwt_secret, algorithm=jwt_algo)
-
-    def _api_auth_standalone(self, session, auth_data):
-        username = auth_data.get('username')
-        password = auth_data.get('password')
-        db_result = data_access.account_login_standalone(session, username, password)
-        if db_result is not None:
-            return (True, db_result['account_id'])
+        session = self.Session(autoflush=True)
+        try:
+            auth_request = AuthRequest.from_dict(auth_data)
+            account_id = auth_request.auth(session, self.app_config)
+            token = get_auth_jwt(session, account_id, jwt_secret, jwt_algo)
+        except ServiceException as error:
+            session.rollback()
+            status_code = error.status_code
+            response_dict = {'success': False, 'response': error.as_dict()}
+        # except Exception as error:
+        #     session.rollback()
+        #     status_code = 500
+        #     response_dict = {'success': False, 'response': 'Server error'}
         else:
-            return (False, None)
+            session.commit()
+            status_code = 200
+            response_dict = {'success': True, 'response': token}
+        finally:
+            content = json.dumps(response_dict)
+            return Response(content, status=status_code, mimetype='application/json')
 
-    def _api_auth_google(self, session, auth_data):
-        # Token verification w/ google
-        user_token = auth_data.get('token')
-        if user_token is None:
-            return (False, None)
-        google_client_id = self.app_config['auth']['backends']['google']['client_id']
-        result = auth.verify_google_token(google_client_id, user_token) # TODO: What happens when this fails?
-        # Account retrieval
-        db_result = data_access.account_login_google(session, result['email'])
-        if db_result is not None:
-            return (True, db_result['account_id'])
-        else:
-            return (False, None)
+# Business routes --------------------------------------------------------------
 
-    def api_buildings(self):
+    def api_index(self):
+        content = json.dumps({'message': 'Hello world!'})
+        return Response(content, mimetype='application/json')
+
+    def api_get_building(self, building_id):
         session = self.Session(autocommit=True)
-        buildings = data_access.buildings_all(session)
-        return Response(str(buildings), mimetype='application/json')
+        try:
+            buildings = get_building(session, building_id)
+        except ServiceException as error:
+            response_dict = {'success': False}
+        finally:
+            session.close()
+            content = json.dumps(response_dict)
+            return Response(content, mimetype='application/json')
 
-    def api_building_get(self, building_id):
+    def api_list_buildings(self):
         session = self.Session(autocommit=True)
-        building = data_access.buildings_get(session, building_id)
-        return Response(str(building), mimetype='application/json')
+        try:
+            buildings = list_buildings(session)
+        except ServiceException as error:
+            response_dict = {'success': False}
+        finally:
+            session.close()
+            content = json.dumps(response_dict)
+            return Response(content, mimetype='application/json')

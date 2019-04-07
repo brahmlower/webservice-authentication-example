@@ -25,7 +25,7 @@ CREATE TYPE hash_gen AS ENUM (
     'gen_1'
 );
 
-CREATE TABLE accounts_standalone (
+CREATE TABLE accounts_standard (
     id          serial PRIMARY KEY,
     account_id  INTEGER REFERENCES accounts(id) UNIQUE,
     username    varchar NOT NULL UNIQUE,

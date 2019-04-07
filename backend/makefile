@@ -7,8 +7,8 @@ DB_PASS = buildings-password
 .PHONY: run
 run:
 	rm -rf src/static
-	cd frontend && npm run build
-	cp -r frontend/build src/static
+	cd ../frontend && npm run build
+	cp -r ../frontend/build src/static
 	gunicorn --reload --bind 0.0.0.0:8000 'src:build_app()'
 
 .PHONY: test-lint
@@ -50,14 +50,14 @@ db-shell:
 # Initializes the database with the schema only
 .PHONY: db-init
 db-init:
-	PGPASSWORD=$(DB_PASS) psql -U $(DB_USER) -h $(DB_HOST) -d $(DB_NAME) -f sql/schema.sql
+	PGPASSWORD=$(DB_PASS) psql -U $(DB_USER) -h $(DB_HOST) -d $(DB_NAME) -f ../sql/schema.sql
 
 # Intializes the database with data. Assumes the schema has already been appied
 .PHONY: db-load
 db-load:
-	PGPASSWORD=$(DB_PASS) psql -U $(DB_USER) -h $(DB_HOST) -d $(DB_NAME) -f sql/data.sql
+	PGPASSWORD=$(DB_PASS) psql -U $(DB_USER) -h $(DB_HOST) -d $(DB_NAME) -f ../sql/data.sql
 
 # Drops the buildings table from the database if it exists
 .PHONY: db-drop
 db-drop:
-	PGPASSWORD=$(DB_PASS) psql -U $(DB_USER) -h $(DB_HOST) -d $(DB_NAME) -f sql/revert.sql
+	PGPASSWORD=$(DB_PASS) psql -U $(DB_USER) -h $(DB_HOST) -d $(DB_NAME) -f ../sql/revert.sql
