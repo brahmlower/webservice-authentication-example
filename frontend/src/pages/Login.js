@@ -5,7 +5,7 @@ import { GoogleButton } from '../components/GoogleButton.js';
 import { TwitterButton } from '../components/TwitterButton.js';
 import { FacebookButton } from '../components/FacebookButton.js';
 import { GithubButton } from '../components/GithubButton.js';
-import { BuildingsLoginForm } from '../components/StandaloneLoginForm.js';
+import { BuildingsLoginForm } from '../components/StandardLoginForm.js';
 import { LoginPanelDisplay } from '../models/Auth.js';
 import { isAuthed } from '../Common.js';
 

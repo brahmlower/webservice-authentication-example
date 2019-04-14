@@ -9,8 +9,8 @@ function apiFailure (response) {
 
 function buildAuthRequest (username, password) {
   return {
-    method: 'standalone',
-    standalone: {
+    method: 'standard',
+    standard: {
       username: username,
       password: password
     }
