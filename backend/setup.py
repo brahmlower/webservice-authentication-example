@@ -1,26 +1,27 @@
 from setuptools import setup
 
 setup(
-    name = 'authed_buildings_api',
+    name = 'buildings_api',
     version = '0.1.0',
     description = 'An API about tall buildings',
     author = 'Brahm Lower',
     author_email = 'bplower@gmail.com',
 
-    py_modules = ["buildings_api"],
+    packages = ['buildings_api', 'buildings_api.domain', 'buildings_api.data_access'],
+    package_dir = {'buildings_api': 'src'},
     install_requires = [
-        'Flask',
-        'PyYAML',
-        'psycopg2-binary',
-        'pyjwt',
-        'flask-sqlalchemy'
+        'Flask==1.0.2',
+        'PyYAML==3.13',
+        'psycopg2-binary==2.7.7',
+        'pyjwt==1.7.1',
+        'flask-sqlalchemy==2.3.2',
+        'google-auth==1.6.3',
+        'requests==2.21.0',
+        'bcrypt==3.1.6'
     ],
     entry_points = {
         'console_scripts': [
             'buildings-api=buildings_api:main'
         ]
-    },
-    project_urls = {
-        'Source': 'https://github.com/bplower/docker-presentation/buildings-api'
     }
 )

@@ -2,27 +2,23 @@
 version: '3.1'
 
 services:
-  # buildings:
-  #   build:
-  #     context: .
-  #     dockerfile: dockerfile
-  #   image: buildings-api
-  #   volumes:
-  #     - ./settings.yml:/app/settings.yml:ro
-  #   depends_on:
-  #     - db
-  #   ports:
-  #     - "8000:8000"
-  # web-ui:
-  #   build:
-  #     context: buildings-ui
-  #     dockerfile: dockerfile
-  #   image: buildings-ui
-  #   depends_on:
-  #     - api-python
-  #     - api-php
-  #   ports:
-  #     - "8000:8000"
+  web:
+    image: nginx
+    ports:
+      - 8000:80
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend/build:/var/www/authed-buildings.example.com:ro
+    extra_hosts:
+    - "authed-buildings.example.com:192.168.0.4"
+  api:
+    build: backend/.
+    volumes:
+      - ./docker/settings.yml:/settings.yml:ro
+    depends_on:
+      - db
+    ports:
+      - 8001:80
   db:
     image: postgres
     restart: always

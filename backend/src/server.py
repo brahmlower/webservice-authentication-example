@@ -3,7 +3,6 @@ from flask import Flask
 from flask import Response
 from flask import request
 from flask import send_from_directory
-# from flask_api.status import HTTP_200_OK
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 
@@ -16,13 +15,11 @@ from .errors import ServiceException
 
 class BuildingsApi(Flask):
     def __init__(self, app_config):
-        super().__init__(__name__, static_folder=None)
-        # Dummy static routes
-        self.route('/static/<path:path>')(self.send_static)
-        self.route('/<path:path>')(self.index)
+        super().__init__(__name__)
+        # Service management routes
         self.route('/')(self.index)
+        self.route('/health')(self.health)
         # API routes
-        self.route('/api/')(self.api_index)
         self.route('/api/signup', methods=['POST'])(self.api_signup)
         self.route('/api/auth', methods=['POST'])(self.api_auth)
         self.route('/api/buildings')(self.api_list_buildings)
@@ -43,14 +40,6 @@ class BuildingsApi(Flask):
             database=self.app_config['db']['database'],
             port=self.app_config['db']['port']
         )
-
-# Dummy static routes ----------------------------------------------------------
-
-    def index(self, path=None):
-        return send_from_directory('static', 'index.html')
-
-    def send_static(self, path):
-        return send_from_directory('static/static', path)
 
 # Authentication routes --------------------------------------------------------
 
@@ -144,10 +133,6 @@ class BuildingsApi(Flask):
             session.rollback()
             status_code = error.status_code
             response_dict = {'success': False, 'response': error.as_dict()}
-        # except Exception as error:
-        #     session.rollback()
-        #     status_code = 500
-        #     response_dict = {'success': False, 'response': 'Server error'}
         else:
             session.commit()
             status_code = 200
@@ -180,28 +165,45 @@ class BuildingsApi(Flask):
 
 # Business routes --------------------------------------------------------------
 
-    def api_index(self):
-        content = json.dumps({'message': 'Hello world!'})
+    def index(self):
+        content = json.dumps({
+            'message': 'Version information should go here I think?'
+        })
+        return Response(content, mimetype='application/json')
+
+    def health(self):
+        content = json.dumps({
+            'health': 'okay (stubbed)',
+            'checks': {
+                'db': 'okay (stubbed)'
+            }
+        })
         return Response(content, mimetype='application/json')
 
     def api_get_building(self, building_id):
         session = self.Session(autocommit=True)
         try:
-            buildings = get_building(session, building_id)
+            building = get_building(session, building_id)
         except ServiceException as error:
+            status_code = 400
             response_dict = {'success': False}
+        else:
+            status_code = 200
+            response_dict = {'success': True, 'result': building}
         finally:
-            session.close()
             content = json.dumps(response_dict)
-            return Response(content, mimetype='application/json')
+            return Response(content, status=status_code, mimetype='application/json')
 
     def api_list_buildings(self):
         session = self.Session(autocommit=True)
         try:
             buildings = list_buildings(session)
         except ServiceException as error:
+            status_code = 400
             response_dict = {'success': False}
+        else:
+            status_code = 200
+            response_dict = {'success': True, 'result': buildings}
         finally:
-            session.close()
             content = json.dumps(response_dict)
-            return Response(content, mimetype='application/json')
+            return Response(content, status=status_code, mimetype='application/json')
