@@ -151,10 +151,32 @@ class BuildingsApi(Flask):
         else:
             session.commit()
             status_code = 200
-            response_dict = {'success': True, 'response': token}
+            response_dict = {'success': True, 'response': {'token': token}}
         finally:
             content = json.dumps(response_dict)
             return Response(content, status=status_code, mimetype='application/json')
+
+# Account management routes ----------------------------------------------------
+
+    def api_list_accounts(self):
+        session = self.Session(autoflush=True)
+        accounts_list = get_accounts(session)
+        status_code = 200
+        response_dict = {'success': True, 'response': accounts_list}
+        content = json.dumps(response_dict)
+        return Response(content, status=status_code, mimetype='application/json')
+
+    def api_get_account(self):
+        pass
+
+    def api_delete_account(self):
+        pass
+
+    def api_list_account_providers(self):
+        pass
+
+    def api_get_account_provider(self):
+        pass
 
 # Business routes --------------------------------------------------------------
 
