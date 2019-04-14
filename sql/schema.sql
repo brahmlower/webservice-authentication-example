@@ -22,6 +22,7 @@ CREATE TABLE accounts_google (
 );
 
 CREATE TYPE hash_gen AS ENUM (
+    'gen_0',
     'gen_1'
 );
 
@@ -30,9 +31,8 @@ CREATE TABLE accounts_standard (
     account_id  INTEGER REFERENCES accounts(id) UNIQUE,
     username    varchar NOT NULL UNIQUE,
     password    varchar NOT NULL,
-    salt        varchar NOT NULL,
     compromised boolean NOT NULL,
-    hash_gen    hash_gen
+    hash_gen    hash_gen NOT NULL
 );
 
 -- 2 FACTOR LATER

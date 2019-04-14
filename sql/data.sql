@@ -14,5 +14,5 @@ INSERT INTO buildings(id, name, height, city, country) VALUES
 INSERT INTO accounts(id, name) VALUES
 (0, 'Bob Bobberson');
 
-INSERT INTO accounts_standard(account_id, username, password, salt, compromised, hash_gen) VALUES
-(0, 'bob', 'bob', 'saltsaltsalt', false, 'gen_1');
+INSERT INTO accounts_standard(account_id, username, password, compromised, hash_gen) VALUES
+(0, 'bigbob', '8urgers', false, 'gen_0');
