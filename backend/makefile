@@ -1,16 +1,11 @@
 
-DB_HOST = localhost
-DB_NAME = buildings-db
-DB_USER = buildings-user
-DB_PASS = buildings-password
-
 .PHONY: build
 build:
 	python setup.py sdist
 
 .PHONY: run
 run:
-	gunicorn --reload --bind 0.0.0.0:8001 'src:build_app()'
+	gunicorn --reload --bind 0.0.0.0:8000 'src:build_app()'
 
 .PHONY: test-lint
 test-lint:

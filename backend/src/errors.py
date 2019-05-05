@@ -1,6 +1,7 @@
 
 class ServiceException(Exception):
     def __init__(self, message, status=400):
+        super().__init__()
         self.message = message
         self.status_code = status
 

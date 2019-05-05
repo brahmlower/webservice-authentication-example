@@ -7,6 +7,12 @@ def account_base_create(engine, name):
     result = engine.execute(sql, {'name': name})
     return result.fetchone()
 
+def account_base_list(engine):
+    """ Get all base accounts """
+    sql = text("SELECT * FROM accounts")
+    result = engine.execute(sql)
+    return result.fetchall()
+
 def account_base_get_by_id(engine, record_id):
     """ Get an account by id """
     sql = text("SELECT * FROM accounts WHERE id = :record_id")
@@ -31,6 +37,11 @@ def account_standard_create(engine, base_account_id, username, password):
 def account_standard_get_by_username(engine, username):
     sql = text("SELECT * FROM accounts_standard WHERE username like :username")
     result = engine.execute(sql, {'username': username})
+    return result.fetchone()
+
+def account_standard_get_by_account_id(engine, account_id):
+    sql = text("SELECT * FROM accounts_standard WHERE account_id = :account_id")
+    result = engine.execute(sql, {'account_id': account_id})
     return result.fetchone()
 
 def account_standard_update_auth_gen(engine, record_id, password, hash_gen):
@@ -66,4 +77,9 @@ def account_google_get_by_email(engine, email_address):
     """ This is a wrapper for getting an account by email address """
     sql = text("SELECT account_id FROM accounts_google WHERE email like :email_address")
     result = engine.execute(sql, {'email_address': email_address})
+    return result.fetchone()
+
+def account_google_get_by_account_id(engine, account_id):
+    sql = text("SELECT * FROM accounts_google WHERE account_id = :account_id")
+    result = engine.execute(sql, {'account_id': account_id})
     return result.fetchone()

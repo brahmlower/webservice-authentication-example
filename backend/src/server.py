@@ -2,15 +2,19 @@ import json
 from flask import Flask
 from flask import Response
 from flask import request
-from flask import send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 
-from .domain.account import AuthRequest
-from .domain.account import SignupRequest
+from .domain.auth import AuthRequest
+from .domain.auth import SignupRequest
 from .domain.account import get_auth_jwt
+from .domain.account import list_accounts
+from .domain.account import get_account
+from .domain.account import list_account_providers
+from .domain.account import get_account_provider
 from .domain.buildings import get_building
 from .domain.buildings import list_buildings
+from .domain.buildings import Building
 from .errors import ServiceException
 
 class BuildingsApi(Flask):
@@ -22,6 +26,10 @@ class BuildingsApi(Flask):
         # API routes
         self.route('/api/signup', methods=['POST'])(self.api_signup)
         self.route('/api/auth', methods=['POST'])(self.api_auth)
+        self.route('/api/accounts')(self.api_list_accounts)
+        self.route('/api/accounts/<account_id>')(self.api_get_account)
+        self.route('/api/accounts/<account_id>/providers')(self.api_list_account_providers)
+        self.route('/api/accounts/<account_id>/providers/<provider_name>')(self.api_get_account_provider)
         self.route('/api/buildings')(self.api_list_buildings)
         self.route('/api/buildings/<building_id>')(self.api_get_building)
         # Read the configuration file
@@ -145,23 +153,59 @@ class BuildingsApi(Flask):
 
     def api_list_accounts(self):
         session = self.Session(autoflush=True)
-        accounts_list = get_accounts(session)
-        status_code = 200
-        response_dict = {'success': True, 'response': accounts_list}
-        content = json.dumps(response_dict)
-        return Response(content, status=status_code, mimetype='application/json')
+        try:
+            accounts = list_accounts(session)
+        except ServiceException as error:
+            status_code = 400
+            response_dict = {'success': False, 'response': error.as_dict()}
+        else:
+            status_code = 200
+            response_dict = {'success': True, 'response': [x.as_dict() for x in accounts]}
+        finally:
+            content = json.dumps(response_dict)
+            return Response(content, status=status_code, mimetype='application/json')
 
-    def api_get_account(self):
-        pass
+    def api_get_account(self, account_id):
+        session = self.Session(autoflush=True)
+        try:
+            account = get_account(session, account_id)
+        except ServiceException as error:
+            status_code = 400
+            response_dict = {'success': False, 'response': error.as_dict()}
+        else:
+            status_code = 200
+            response_dict = {'success': True, 'response': account.as_dict()}
+        finally:
+            content = json.dumps(response_dict)
+            return Response(content, status=status_code, mimetype='application/json')
 
-    def api_delete_account(self):
-        pass
+    def api_list_account_providers(self, account_id):
+        session = self.Session(autoflush=True)
+        try:
+            provider_types = list_account_providers(session, account_id)
+        except ServiceException as error:
+            status_code = 400
+            response_dict = {'success': False, 'response': error.as_dict()}
+        else:
+            status_code = 200
+            response_dict = {'success': True, 'response': provider_types}
+        finally:
+            content = json.dumps(response_dict)
+            return Response(content, status=status_code, mimetype='application/json')
 
-    def api_list_account_providers(self):
-        pass
-
-    def api_get_account_provider(self):
-        pass
+    def api_get_account_provider(self, account_id, provider_name):
+        session = self.Session(autoflush=True)
+        try:
+            provider_list = get_account_provider(session, account_id, provider_name)
+        except ServiceException as error:
+            status_code = 400
+            response_dict = {'success': False, 'response': error.as_dict()}
+        else:
+            status_code = 200
+            response_dict = {'success': True, 'response': [x.as_dict() for x in provider_list]}
+        finally:
+            content = json.dumps(response_dict)
+            return Response(content, status=status_code, mimetype='application/json')
 
 # Business routes --------------------------------------------------------------
 
@@ -189,7 +233,7 @@ class BuildingsApi(Flask):
             response_dict = {'success': False}
         else:
             status_code = 200
-            response_dict = {'success': True, 'result': building}
+            response_dict = {'success': True, 'response': building.as_dict()}
         finally:
             content = json.dumps(response_dict)
             return Response(content, status=status_code, mimetype='application/json')
@@ -203,7 +247,7 @@ class BuildingsApi(Flask):
             response_dict = {'success': False}
         else:
             status_code = 200
-            response_dict = {'success': True, 'result': buildings}
+            response_dict = {'success': True, 'response': [x.as_dict() for x in buildings]}
         finally:
             content = json.dumps(response_dict)
             return Response(content, status=status_code, mimetype='application/json')
