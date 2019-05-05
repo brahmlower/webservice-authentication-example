@@ -4,8 +4,26 @@ CREATE TABLE buildings (
     name    varchar NOT NULL,
     height  integer NOT NULL,
     city    varchar NOT NULL,
-    country varchar NOT NULL
+    country varchar NOT NULL,
+    row_permissions text NOT NULL
 );
+
+ALTER TABLE buildings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE buildings FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY buildings_policy ON buildings
+USING (row_permissions LIKE current_setting('authed_buildings.username'))
+WITH CHECK (row_permissions LIKE current_setting('authed_buildings.username'));
+
+-- CREATE A READONLY USER
+
+CREATE USER read_only_user;
+ALTER USER read_only_user WITH PASSWORD 'read_only_user';
+GRANT CONNECT ON DATABASE "buildings-db" TO read_only_user;
+GRANT USAGE ON SCHEMA public TO read_only_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO read_only_user;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO read_only_user;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO read_only_user;
 
 -- AUTH RELATED TABLES
 

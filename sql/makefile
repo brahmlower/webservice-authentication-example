@@ -1,4 +1,9 @@
 
+DB_HOST = localhost
+DB_NAME = buildings-db
+DB_USER = buildings-user
+DB_PASS = buildings-password
+
 # Quality of life helper for connecting to your database.
 .PHONY: shell
 shell:
