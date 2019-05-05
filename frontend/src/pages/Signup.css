@@ -1,0 +1,8 @@
+.signupErrors > [role="alert"] {
+    padding: 6px 12px;
+    text-align: left;
+  }
+
+.signupErrors > [role="alert"] > [type="button"] {
+  padding: 6px 12px;
+}

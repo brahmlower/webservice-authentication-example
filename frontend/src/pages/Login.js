@@ -6,12 +6,14 @@ import { TwitterButton } from '../components/TwitterButton.js';
 import { FacebookButton } from '../components/FacebookButton.js';
 import { GithubButton } from '../components/GithubButton.js';
 import { BuildingsLoginForm } from '../components/StandardLoginForm.js';
-import { LoginPanelDisplay } from '../models/Auth.js';
+import { AuthPanelDisplay } from '../models/Auth.js';
 import { isAuthed } from '../Common.js';
+import { BuildingsNavbar } from '../components/Navbar.js'
+import './Login.css'
 
 class MethodSelection extends Component {
   render () {
-    let buildingsFn = () => this.props.nav(LoginPanelDisplay.BUILDINGS)
+    let buildingsFn = () => this.props.nav(AuthPanelDisplay.BUILDINGS)
     let authCallback = this.props.authSuccessCallback
     return (
       <div>
@@ -32,7 +34,7 @@ class LoginPanel extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      panel: LoginPanelDisplay.SELECTION
+      panel: AuthPanelDisplay.SELECTION
     };
     this.setView = this.setView.bind(this);
     this.onAuthSuccess = this.onAuthSuccess.bind(this);
@@ -52,7 +54,7 @@ class LoginPanel extends Component {
     if (isAuthed() === true) {
       return <Redirect to='/home' />
     }
-    if (this.state.panel === LoginPanelDisplay.BUILDINGS) {
+    if (this.state.panel === AuthPanelDisplay.BUILDINGS) {
       return <BuildingsLoginForm authSuccessCallback={this.onAuthSuccess} nav={this.setView} />;
     } else {
       return <MethodSelection authSuccessCallback={this.onAuthSuccess} nav={this.setView} />;
@@ -62,21 +64,25 @@ class LoginPanel extends Component {
 
 class PageLogin extends Component {
   render () {
-    return (<Container>
-        <br />
-        <br />
-        <br />
-        <Row>
-          <div className="col-sm-4" style={{margin: 'auto'}}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Login</Card.Title>
-              <LoginPanel />
-            </Card.Body>
-          </Card>
-          </div>
-        </Row>
-      </Container>
+    return (
+      <div>
+        <BuildingsNavbar />
+        <Container>
+          <br />
+          <br />
+          <br />
+          <Row>
+            <div className="col-sm-4" style={{margin: 'auto'}}>
+            <Card>
+              <Card.Body>
+                <Card.Title>Login</Card.Title>
+                <LoginPanel />
+              </Card.Body>
+            </Card>
+            </div>
+          </Row>
+        </Container>
+      </div>
     )
   }
 }

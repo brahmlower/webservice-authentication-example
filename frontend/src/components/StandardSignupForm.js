@@ -1,29 +1,38 @@
 import React, { Component } from 'react'
 import { Form, Button, Alert } from 'react-bootstrap';
-import { apiAuth } from '../api/Auth.js';
+import { apiSignup } from '../api/Auth.js';
 import { AuthPanelDisplay } from '../models/Auth.js';
 
-function buildAuthRequest (username, password) {
+function buildSignupRequest (name, username, password) {
   return {
     method: 'standard',
     standard: {
+      name: name,
       username: username,
       password: password
     }
   }
 }
 
-class BuildingsLoginForm extends Component {
+class BuildingsSignupForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      name: '',
       username: '',
       password: '',
+      passwordDup: '',
+      nameError: null,
+      usernameError: null,
+      passwordError: null,
+      passwordDupError: null,
       errors: []
     };
     this.formSubmit = this.formSubmit.bind(this);
+    this.updateName = this.updateName.bind(this);
     this.updateUsername = this.updateUsername.bind(this);
     this.updatePassword = this.updatePassword.bind(this);
+    this.updatePasswordDup = this.updatePasswordDup.bind(this);
     this.apiFailure = this.apiFailure.bind(this);
     this.successCallbackWrapper = this.successCallbackWrapper.bind(this);
   }
@@ -43,9 +52,13 @@ class BuildingsLoginForm extends Component {
   formSubmit () {
     console.log("Form submit initiated")
     // Build the buildings api request object
-    let bapiRequest = buildAuthRequest(this.state.username, this.state.password)
+    let bapiRequest = buildSignupRequest(this.state.name, this.state.username, this.state.password)
     // Make the buildings api call
-    apiAuth(bapiRequest, this.successCallbackWrapper, this.apiFailure);
+    apiSignup(bapiRequest, this.successCallbackWrapper, this.apiFailure);
+  }
+
+  updateName (event) {
+    this.setState({ name: event.target.value })
   }
 
   updateUsername (event) {
@@ -56,21 +69,31 @@ class BuildingsLoginForm extends Component {
     this.setState({ password: event.target.value })
   }
 
+  updatePasswordDup (event) {
+    this.setState({ passwordDup: event.target.value })
+  }
+
   render () {
     let backFn = () => this.props.nav(AuthPanelDisplay.SELECTION)
     return (
       <Form>
+        <Form.Group controlId="formBasicName">
+          <Form.Control type="text" placeholder="Name" onChange={this.updateName} tabIndex={1} autoFocus />
+        </Form.Group>
         <Form.Group controlId="formBasicEmail">
-          <Form.Control type="text" placeholder="Username" onChange={this.updateUsername} tabIndex={1} autoFocus />
+          <Form.Control type="text" placeholder="Username" onChange={this.updateUsername} tabIndex={2} />
         </Form.Group>
         <Form.Group controlId="formBasicPassword">
-          <Form.Control type="password" placeholder="Password" onChange={this.updatePassword} tabIndex={2} />
+          <Form.Control type="password" placeholder="Password" onChange={this.updatePassword} tabIndex={3} />
+        </Form.Group>
+        <Form.Group controlId="formBasicPasswordDup">
+          <Form.Control type="password" placeholder="Repeat Password" onChange={this.updatePasswordDup} tabIndex={4} />
         </Form.Group>
         <Form.Group style={{overflow: "hidden"}}>
-          <Button variant="outline-secondary" onClick={backFn} className="float-left" tabIndex={4}> Cancel </Button>
-          <Button variant="primary" className="float-right" tabIndex={3} onClick={this.formSubmit}> Submit </Button>
+          <Button variant="outline-secondary" onClick={backFn} className="float-left" tabIndex={5}> Cancel </Button>
+          <Button variant="primary" className="float-right" tabIndex={6} onClick={this.formSubmit}> Submit </Button>
         </Form.Group>
-        <div className="loginErrors">
+        <div className="signupErrors">
           {this.state.errors.map( (error, idx) => {
             console.log(error.response)
             return (
@@ -83,4 +106,4 @@ class BuildingsLoginForm extends Component {
   }
 }
 
-export { BuildingsLoginForm }
+export { BuildingsSignupForm }

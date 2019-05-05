@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import { Button } from 'react-bootstrap';
 import { Redirect } from 'react-router-dom';
-import { isAuthed, linkButtonStyle } from '../Common.js';
+import { isAuthed } from '../Common.js';
+import { BuildingsNavbar } from '../components/Navbar.js'
 
 class PageHome extends Component {
   constructor(props) {
@@ -15,16 +15,17 @@ class PageHome extends Component {
   }
 
   render () {
+    // Redirect user to index if they're not logged in
     if (isAuthed() === false) {
       return <Redirect to='/' />
-    } else {
-      return (
-        <div>
-          <p>This is the HOME PAGE</p>
-          <Button variant="link" style={linkButtonStyle} onClick={this.logout}> Logout </Button>
-        </div>
-      )
     }
+    // Build the page as usual
+    return (
+      <div>
+        <BuildingsNavbar />
+        <p>This is the HOME PAGE</p>
+      </div>
+    )
   }
 }
 

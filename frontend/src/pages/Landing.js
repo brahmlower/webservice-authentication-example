@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { Link } from 'react-router-dom';
-import { Jumbotron, Container, Button, Nav, Navbar } from 'react-bootstrap';
+import { Jumbotron, Container } from 'react-bootstrap';
+import { BuildingsNavbar } from '../components/Navbar.js'
 import './Landing.css';
 
 // https://www.kisspng.com/png-high-rise-building-skyscraper-vector-skyscrapers-95811/
@@ -20,20 +20,7 @@ class PageLanding extends Component {
   render () {
     return (
       <div>
-        <Navbar bg="custom" variant="light">
-          <Navbar.Brand href="/"><i class="far fa-building" /> BuildingsAPI</Navbar.Brand>
-          <Navbar.Collapse>
-            <Nav className="mr-auto">
-              {/* <Nav.Link href="/home">
-                <Link to="/home">Login</Link>
-              </Nav.Link> */}
-              <Nav.Link><Link to="/casestudy">Case Study</Link></Nav.Link>
-              <Nav.Link><Link to="/about">About</Link></Nav.Link>
-            </Nav>
-            <Button variant="outline-secondary" style={{marginRight: 8}}><Link to="/login">Login</Link></Button>
-            <Button variant="outline-primary"><Link to="/signup">Sign Up</Link></Button>
-          </Navbar.Collapse>
-        </Navbar>
+        <BuildingsNavbar />
         <Jumbotron fluid style={{margin: 0}}>
           <Container>
             <div className="row align-items-center">
