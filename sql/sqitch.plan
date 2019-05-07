@@ -2,3 +2,5 @@
 %project=authed_buildings
 
 init 2019-05-07T03:09:45Z Brahm Lower <contact@brahmlower.io> # Initial tables for project
+buildings_table 2019-05-07T03:36:01Z Brahm Lower <contact@brahmlower.io> # Adding the buildings table and row policy
+test_data 2019-05-07T03:47:36Z Brahm Lower <contact@brahmlower.io> # Adding some initial test data
