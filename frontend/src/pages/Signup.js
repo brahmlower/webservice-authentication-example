@@ -9,7 +9,7 @@ import { BuildingsSignupForm } from '../components/StandardSignupForm.js'
 import { AuthPanelDisplay } from '../models/Auth.js'
 import { isAuthed } from '../Common.js'
 import { BuildingsNavbar } from '../components/Navbar.js'
-import './SignUp.css'
+import './Signup.css'
 
 class MethodSelection extends Component {
   render () {
