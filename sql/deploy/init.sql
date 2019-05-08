@@ -2,10 +2,15 @@
 
 BEGIN;
 
+CREATE USER service_user with encrypted password 'service_user_password';
+GRANT ALL PRIVILEGES ON DATABASE buildings_db TO service_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO service_user;
+
 -- Base definition of an account. Authentication records reference this object.
 CREATE TABLE accounts (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR NOT NULL
+    id              SERIAL PRIMARY KEY,
+    name            VARCHAR NOT NULL,
+    login_enabled   BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- Auth records for Google OAuth

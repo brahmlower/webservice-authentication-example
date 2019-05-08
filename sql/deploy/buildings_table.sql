@@ -8,7 +8,8 @@ CREATE TABLE buildings (
     height      INTEGER NOT NULL,
     city        VARCHAR NOT NULL,
     country     VARCHAR NOT NULL,
-    owner_id    INTEGER REFERENCES accounts(id)
+    owner_id    INTEGER REFERENCES accounts(id) NOT NULL,
+    is_public   BOOLEAN NOT NULL
 );
 
 -- Enable row seciruty on the buildings table
@@ -21,10 +22,10 @@ ALTER TABLE buildings FORCE ROW LEVEL SECURITY;
 -- records are denoted by a NULL owner_id.
 CREATE POLICY buildings_policy ON buildings
 USING ( owner_id = current_setting('authed_buildings.user_id')::INTEGER
-    OR  owner_id IS NULL
+    OR  is_public = TRUE
     )
 WITH CHECK (
-    record_owner = current_setting('authed_buildings.user_id')::INTEGER
+    owner_id = current_setting('authed_buildings.user_id')::INTEGER
     );
 
 COMMIT;

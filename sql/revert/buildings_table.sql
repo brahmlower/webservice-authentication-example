@@ -2,7 +2,7 @@
 
 BEGIN;
 
-DROP POLICY buildings_policy;
+DROP POLICY buildings_policy ON buildings;
 DROP TABLE buildings;
 
 COMMIT;
