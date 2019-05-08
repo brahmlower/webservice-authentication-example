@@ -23,8 +23,8 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: buildings-db
-      POSTGRES_USER: buildings-user
-      POSTGRES_PASSWORD: buildings-password
+      POSTGRES_DB: buildings_db
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: admin_user_password
     ports:
       - 5432:5432

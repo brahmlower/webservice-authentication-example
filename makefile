@@ -31,14 +31,14 @@ backend-run: ## Run the backend locally via gunicorn
 db-shell: ## Enters a psql shell on docker database
 	cd sql && make shell
 
-.PHONY: db-init
-db-init: ## Create the database schema
-	cd sql && make init
+.PHONY: db-shell-service
+db-shell-service: ## Enters a psql shell on docker database as service user
+	cd sql && make shell-service
 
-.PHONY: db-load
-db-load: ## Load test data into the database
-	cd sql && make load
+.PHONY: db-deploy
+db-deploy: ## Create the database schema
+	cd sql && make deploy
 
-.PHONY: db-drop
-db-drop: ## Drop the database data and schema
-	cd sql && make drop
+.PHONY: db-revert
+db-revert: ## Revert the database data and schema
+	cd sql && make revert
