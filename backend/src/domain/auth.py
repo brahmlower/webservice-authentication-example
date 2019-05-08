@@ -1,4 +1,4 @@
-import jwt
+# import jwt
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
@@ -18,14 +18,25 @@ from .account import StandardAccount
 from .auth_generations import PlaintextAuth
 from .auth_generations import BcryptAuth
 
-from ..errors import InvalidProviderError
+from ..errors import DatabaseError
+from ..errors import GoogleSignupMissingToken
+from ..errors import GoogleAuthMissingToken
+from ..errors import GoogleAuthUpstreamError
 from ..errors import StandardSignupMissingName
 from ..errors import StandardSignupMissingUsername
 from ..errors import StandardSignupMissingPassword
+from ..errors import StandardAuthMissingUsername
+from ..errors import StandardAuthMissingPassword
 from ..errors import StandardAuthFailure
+from ..errors import AuthProviderRequestUnreadable
+from ..errors import AuthProviderNotImplemented
+from ..errors import AuthProviderInvalidProvider
+from ..errors import AuthProviderMissingProvider
+from ..errors import AuthProviderMissingProviderDetails
 
 # Base class
 class AuthProviders(object):
+    """ Base class for supporting multiple Providers through some arbitrary process. This class is intended to be subclassed. """
     providers = {}
     def __init__(self, method, method_inst):
         self.method = method
@@ -34,16 +45,18 @@ class AuthProviders(object):
     @classmethod
     def get_provider(cls, method):
         if method not in cls.providers.keys():
-            raise InvalidProviderError(method)
+            raise AuthProviderInvalidProvider(method)
         return cls.providers[method]
 
     @classmethod
     def from_dict(cls, data):
+        if data is None:
+            raise AuthProviderRequestUnreadable()
         method = data.get('method')
         if method is None:
-            raise ValueError('Incorrectly formatted request')
+            raise AuthProviderMissingProvider()
         if method not in data.keys():
-            raise ValueError('Missing method specific data structure')
+            raise AuthProviderMissingProviderDetails()
         method_class = cls.get_provider(method)
         method_inst = method_class.from_dict(data[method])
         inst = cls(method, method_inst)
@@ -61,12 +74,12 @@ class StandardSignupRequest(object):
         # Create base account
         db_result = account_base_create(session, self.name)
         if db_result is None:
-            raise Exception('Database operation failed while creating base account')
+            raise DatabaseError(error)
         # Create google account
         account_id = db_result['id']
         db_result = account_standard_create(session, account_id, self.username, self.password)
         if db_result is None:
-            raise Exception('Database operation failed while creating standard association')
+            raise DatabaseError(error)
         return account_id
 
     @classmethod
@@ -95,19 +108,19 @@ class GoogleSignupRequest(object):
         # Create base account
         db_result = account_base_create(session, oauth_name)
         if db_result is None:
-            raise Exception('Database operation failed while creating base account')
+            raise DatabaseError(error)
         # Create google account
         account_id = db_result['id']
         db_result = account_google_create(session, account_id, oauth_name, oauth_email)
         if db_result is None:
-            raise Exception('Database operation failed while creating google oauth association')
+            raise DatabaseError(error)
         return account_id
 
     @classmethod
     def from_dict(cls, data):
         token = data.get('token')
         if token is None:
-            raise ValueError('Google: Missing token')
+            raise GoogleSignupMissingToken()
         inst = cls(token)
         return inst
 
@@ -126,7 +139,7 @@ class SignupRequest(AuthProviders):
             google_client_id = app_config['auth']['backends']['google']['client_id']
             account_id = self.method_inst.signup(session, google_client_id)
             return account_id
-        raise ValueError('Method has no corresponding authentication mechanism')
+        raise AuthProviderNotImplemented(self.method)
 
 # Authentication classes -------------------------------------------------------
 
@@ -159,10 +172,10 @@ class StandardAuthRequest(object):
     def from_dict(cls, data):
         username = data.get('username')
         if username is None:
-            raise ValueError()
+            raise StandardAuthMissingUsername()
         password = data.get('password')
         if password is None:
-            raise ValueError()
+            raise StandardAuthMissingPassword()
         inst = cls(username, password)
         return inst
 
@@ -176,14 +189,14 @@ class GoogleAuthRequest(object):
         # Account retrieval
         db_result = account_google_get_by_email(session, oauth_email)
         if db_result is None:
-            raise Exception('Error while getting google stuff')
+            raise GoogleAuthUpstreamError()
         return db_result['account_id']
 
     @classmethod
     def from_dict(cls, data):
         user_token = data.get('token')
         if user_token is None:
-            raise ValueError('Missing required property: token')
+            raise GoogleAuthMissingToken()
         inst = cls(user_token)
         return inst
 
@@ -202,7 +215,7 @@ class AuthRequest(AuthProviders):
             google_client_id = app_config['auth']['backends']['google']['client_id']
             account_id = self.method_inst.auth(session, google_client_id)
             return account_id
-        raise ValueError('Method has no corresponding authentication mechanism')
+        raise AuthProviderNotImplemented(self.method)
 
 def verify_google_token(google_client_id, user_token):
     id_info = id_token.verify_oauth2_token(user_token, requests.Request(), google_client_id)

@@ -1,13 +1,17 @@
 import json
+from functools import wraps
 from flask import Flask
 from flask import Response
 from flask import request
+from flask import abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 
+from .data_access.account import set_session_account_id
 from .domain.auth import AuthRequest
 from .domain.auth import SignupRequest
 from .domain.account import get_auth_jwt
+from .domain.account import verify_auth_jwt
 from .domain.account import list_accounts
 from .domain.account import get_account
 from .domain.account import list_account_providers
@@ -30,8 +34,16 @@ class BuildingsApi(Flask):
         self.route('/api/accounts/<account_id>')(self.api_get_account)
         self.route('/api/accounts/<account_id>/providers')(self.api_list_account_providers)
         self.route('/api/accounts/<account_id>/providers/<provider_name>')(self.api_get_account_provider)
-        self.route('/api/buildings')(self.api_list_buildings)
-        self.route('/api/buildings/<building_id>')(self.api_get_building)
+        self.route('/api/buildings')(
+            self.require_api_key(
+                self.api_list_buildings
+            )
+        )
+        self.route('/api/buildings/<building_id>')(
+            self.require_api_key(
+                self.api_get_building
+            )
+        )
         # Read the configuration file
         self.app_config = app_config
         self.config['SQLALCHEMY_DATABASE_URI'] = self._get_db_uri()
@@ -48,6 +60,27 @@ class BuildingsApi(Flask):
             database=self.app_config['db']['database'],
             port=self.app_config['db']['port']
         )
+
+    def require_api_key(self, endpoint_func):
+        @wraps(endpoint_func)
+        def foo(*args, **kwargs):
+            jwt_secret = self.app_config['auth']['jwt']['secret']
+            jwt_algo = self.app_config['auth']['jwt']['algo']
+            auth_header = request.headers.get('Authorization')
+            if auth_header is None:
+                # raise Exception('Need "Authorization" header')
+                abort(400)
+            raw_jwt = auth_header[7:]
+            jwt_payload = verify_auth_jwt(raw_jwt, jwt_secret, jwt_algo)
+            account_id = jwt_payload.get('id')
+            if account_id is None:
+                abort(400)
+                # raise Exception('Bad token payload')
+            # We verified the jwt, so now prepare the database session
+            session = self.Session(autoflush=True)
+            set_session_account_id(session, account_id)
+            return endpoint_func(session, *args, **kwargs)
+        return foo
 
 # Authentication routes --------------------------------------------------------
 
@@ -198,7 +231,7 @@ class BuildingsApi(Flask):
         try:
             provider_list = get_account_provider(session, account_id, provider_name)
         except ServiceException as error:
-            status_code = 400
+            status_code = error.status_code
             response_dict = {'success': False, 'response': error.as_dict()}
         else:
             status_code = 200
@@ -224,13 +257,12 @@ class BuildingsApi(Flask):
         })
         return Response(content, mimetype='application/json')
 
-    def api_get_building(self, building_id):
-        session = self.Session(autocommit=True)
+    def api_get_building(self, session, building_id):
         try:
             building = get_building(session, building_id)
         except ServiceException as error:
-            status_code = 400
-            response_dict = {'success': False}
+            status_code = error.status_code
+            response_dict = {'success': False, 'response': error.as_dict()}
         else:
             status_code = 200
             response_dict = {'success': True, 'response': building.as_dict()}
@@ -238,13 +270,12 @@ class BuildingsApi(Flask):
             content = json.dumps(response_dict)
             return Response(content, status=status_code, mimetype='application/json')
 
-    def api_list_buildings(self):
-        session = self.Session(autocommit=True)
+    def api_list_buildings(self, session):
         try:
             buildings = list_buildings(session)
         except ServiceException as error:
-            status_code = 400
-            response_dict = {'success': False}
+            status_code = error.status_code
+            response_dict = {'success': False, 'response': error.as_dict()}
         else:
             status_code = 200
             response_dict = {'success': True, 'response': [x.as_dict() for x in buildings]}

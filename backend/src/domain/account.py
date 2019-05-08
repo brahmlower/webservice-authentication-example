@@ -1,4 +1,5 @@
 import jwt
+from jwt.exceptions import InvalidTokenError
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
@@ -16,6 +17,8 @@ from ..data_access.account import account_google_get_by_account_id
 
 from .auth_generations import PlaintextAuth
 from .auth_generations import BcryptAuth
+
+from ..errors import AuthTokenInvalid
 
 class BaseAccount(object):
     def __init__(self):
@@ -102,6 +105,8 @@ class StandardAccount(object):
         return self.set_auth_gen(self.TARGET_AUTH_GEN, plaintext_secret)
 
     def check_auth_gen_current(self):
+        result = self.hash_gen == self.TARGET_AUTH_GEN
+        print('DEBUG: Account (id: {}) using auth generation {}, where current is {}'.format(self.record_id, self.hash_gen, self.TARGET_AUTH_GEN))
         return self.hash_gen == self.TARGET_AUTH_GEN
 
     def check_password(self, plaintext_secret):
@@ -147,9 +152,14 @@ def get_auth_jwt(session, account_id, jwt_secret, jwt_algo):
         raise Exception('account with id {} not found'.format(account_id))
     # TODO: The following two lines are a sloppy way of preparing the account data
     # for the jwt token. We're basically encoding everything from the account record
-    # in the token except for the primary id.
+    # in the token
     jwt_dict = dict(account)
-    del(jwt_dict['id'])
     token_bytes = jwt.encode(jwt_dict, jwt_secret, algorithm=jwt_algo)
     token_sting = token_bytes.decode('utf-8')
     return token_sting
+
+def verify_auth_jwt(unverified_jwt, jwt_secret, jwt_algo):
+    try:
+        return jwt.decode(unverified_jwt, jwt_secret, algorithms=[jwt_algo])
+    except InvalidTokenError as error:
+        raise AuthTokenInvalid()

@@ -9,8 +9,8 @@ class AuthMethod(object):
     """
     @classmethod
     def prepare_account(cls, account, plaintext_secret, *args, **kwargs):
-        account.hash_gen = cls.GEN_ID
-        account.password = cls.hash_secret(plaintext_secret)
+        account.hash_gen = cls.GEN_ID # pylint: disable=E1101
+        account.password = cls.hash_secret(plaintext_secret) # pylint: disable=E1101
         return account
 
 class PlaintextAuth(AuthMethod):

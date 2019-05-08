@@ -1,8 +1,8 @@
 db:
   hostname: db
-  database: buildings-db
-  username: buildings-user
-  password: buildings-password
+  database: buildings_db
+  username: service_user
+  password: service_user_password
   port: 5432
 auth:
   jwt:
