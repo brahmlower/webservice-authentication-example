@@ -20,6 +20,22 @@ from .domain.buildings import get_building
 from .domain.buildings import list_buildings
 from .domain.buildings import Building
 from .errors import ServiceException
+from .errors import MissingRequiredHeader
+
+def response_from_error(error):
+    message = error.as_dict()
+    content = {'success': False, 'response': message}
+    response = Response(json.dumps(content), status=error.status_code, mimetype='application/json')
+    return response
+
+def response_with_payload(payload):
+    content = {'success': True, 'response': payload} #account.as_dict()
+    response = Response(json.dumps(content), status=200, mimetype='application/json')
+    return response
+
+# # Monkey patch the flask Response object with our custom builder functions
+# setattr(Response, 'from_service_exception', serviceexception_to_response)
+# setattr(Response, 'from_payload', payload_to_response)
 
 class BuildingsApi(Flask):
     def __init__(self, app_config):
@@ -68,8 +84,9 @@ class BuildingsApi(Flask):
             jwt_algo = self.app_config['auth']['jwt']['algo']
             auth_header = request.headers.get('Authorization')
             if auth_header is None:
-                # raise Exception('Need "Authorization" header')
-                abort(400)
+                error = MissingRequiredHeader('Authorization')
+                response = response_from_error(error)
+                abort(response)
             raw_jwt = auth_header[7:]
             jwt_payload = verify_auth_jwt(raw_jwt, jwt_secret, jwt_algo)
             account_id = jwt_payload.get('id')
@@ -124,15 +141,13 @@ class BuildingsApi(Flask):
             token = get_auth_jwt(session, account_id, jwt_secret, jwt_algo)
         except ServiceException as error:
             session.rollback()
-            status_code = error.status_code
-            response_dict = {'success': False, 'response': error.as_dict()}
+            response = response_from_error(error)
         else:
             session.commit()
-            status_code = 200
-            response_dict = {'success': True, 'response': token}
+            payload = {'token': token}
+            response = response_with_payload(token)
         finally:
-            content = json.dumps(response_dict)
-            return Response(content, status=status_code, mimetype='application/json')
+            return response
 
     def api_auth(self):
         """ Endpoint to handle the process of logging into an account
@@ -172,15 +187,13 @@ class BuildingsApi(Flask):
             token = get_auth_jwt(session, account_id, jwt_secret, jwt_algo)
         except ServiceException as error:
             session.rollback()
-            status_code = error.status_code
-            response_dict = {'success': False, 'response': error.as_dict()}
+            response = response_from_error(error)
         else:
             session.commit()
-            status_code = 200
-            response_dict = {'success': True, 'response': {'token': token}}
+            payload = {'token': token}
+            response = response_with_payload(payload)
         finally:
-            content = json.dumps(response_dict)
-            return Response(content, status=status_code, mimetype='application/json')
+            return response
 
 # Account management routes ----------------------------------------------------
 
@@ -189,56 +202,46 @@ class BuildingsApi(Flask):
         try:
             accounts = list_accounts(session)
         except ServiceException as error:
-            status_code = 400
-            response_dict = {'success': False, 'response': error.as_dict()}
+            response = response_from_error(error)
         else:
-            status_code = 200
-            response_dict = {'success': True, 'response': [x.as_dict() for x in accounts]}
+            payload = [x.as_dict() for x in accounts]
+            response = response_with_payload(payload)
         finally:
-            content = json.dumps(response_dict)
-            return Response(content, status=status_code, mimetype='application/json')
+            return response
 
     def api_get_account(self, account_id):
         session = self.Session(autoflush=True)
         try:
             account = get_account(session, account_id)
         except ServiceException as error:
-            status_code = 400
-            response_dict = {'success': False, 'response': error.as_dict()}
+            response = response_from_error(error)
         else:
-            status_code = 200
-            response_dict = {'success': True, 'response': account.as_dict()}
+            response = response_with_payload(account.as_dict())
         finally:
-            content = json.dumps(response_dict)
-            return Response(content, status=status_code, mimetype='application/json')
+            return response
 
     def api_list_account_providers(self, account_id):
         session = self.Session(autoflush=True)
         try:
             provider_types = list_account_providers(session, account_id)
         except ServiceException as error:
-            status_code = 400
-            response_dict = {'success': False, 'response': error.as_dict()}
+            response = response_from_error(error)
         else:
-            status_code = 200
-            response_dict = {'success': True, 'response': provider_types}
+            response = response_with_payload(provider_types)
         finally:
-            content = json.dumps(response_dict)
-            return Response(content, status=status_code, mimetype='application/json')
+            return response
 
     def api_get_account_provider(self, account_id, provider_name):
         session = self.Session(autoflush=True)
         try:
             provider_list = get_account_provider(session, account_id, provider_name)
         except ServiceException as error:
-            status_code = error.status_code
-            response_dict = {'success': False, 'response': error.as_dict()}
+            response = response_from_error(error)
         else:
-            status_code = 200
-            response_dict = {'success': True, 'response': [x.as_dict() for x in provider_list]}
+            payload = [x.as_dict() for x in provider_list]
+            response = response_with_payload(payload)
         finally:
-            content = json.dumps(response_dict)
-            return Response(content, status=status_code, mimetype='application/json')
+            return response
 
 # Business routes --------------------------------------------------------------
 
@@ -261,24 +264,19 @@ class BuildingsApi(Flask):
         try:
             building = get_building(session, building_id)
         except ServiceException as error:
-            status_code = error.status_code
-            response_dict = {'success': False, 'response': error.as_dict()}
+            response = response_from_error(error)
         else:
-            status_code = 200
-            response_dict = {'success': True, 'response': building.as_dict()}
+            response = response_with_payload(building.as_dict())
         finally:
-            content = json.dumps(response_dict)
-            return Response(content, status=status_code, mimetype='application/json')
+            return response
 
     def api_list_buildings(self, session):
         try:
             buildings = list_buildings(session)
         except ServiceException as error:
-            status_code = error.status_code
-            response_dict = {'success': False, 'response': error.as_dict()}
+            response = response_from_error(error)
         else:
-            status_code = 200
-            response_dict = {'success': True, 'response': [x.as_dict() for x in buildings]}
+            payload = [x.as_dict() for x in buildings]
+            response = response_with_payload(payload)
         finally:
-            content = json.dumps(response_dict)
-            return Response(content, status=status_code, mimetype='application/json')
+            return response

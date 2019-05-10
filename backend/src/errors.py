@@ -89,6 +89,10 @@ class AuthProviderMissingProviderDetails(ServiceException):
 
 # Misc auth errors
 
+class MissingRequiredHeader(ServiceException):
+    def __init__(self, header):
+        super().__init__('Missing required header: {}'.format(header))
+
 class AuthTokenInvalid(ServiceException):
     def __init__(self):
         super().__init__('Provided JWT token is invalid')
