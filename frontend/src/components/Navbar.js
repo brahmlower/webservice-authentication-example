@@ -36,12 +36,12 @@ class BuildingsNavbar extends Component {
     return (
       <Navbar bg="custom" variant="light">
         <Navbar.Brand href="/">
-          <i class="far fa-building" /> BuildingsAPI
+          <i className="far fa-building" /> BuildingsAPI
         </Navbar.Brand>
         <Navbar.Collapse>
           <Nav className="mr-auto">
-            <Nav.Link><Link to="/casestudy">Case Study</Link></Nav.Link>
-            <Nav.Link><Link to="/about">About</Link></Nav.Link>
+            <Nav.Link href="/casestudy">Case Study</Nav.Link>
+            <Nav.Link href="/about">About</Nav.Link>
           </Nav>
           {accountNavButtons}
         </Navbar.Collapse>

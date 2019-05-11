@@ -26,6 +26,13 @@ class BuildingsLoginForm extends Component {
     this.updatePassword = this.updatePassword.bind(this);
     this.apiFailure = this.apiFailure.bind(this);
     this.successCallbackWrapper = this.successCallbackWrapper.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+  }
+
+  handleKeyPress(target) {
+    if (target.charCode === 13) {
+      this.formSubmit()
+    }
   }
 
   successCallbackWrapper (response) {
@@ -61,10 +68,10 @@ class BuildingsLoginForm extends Component {
     return (
       <Form>
         <Form.Group controlId="formBasicEmail">
-          <Form.Control type="text" placeholder="Username" onChange={this.updateUsername} tabIndex={1} autoFocus />
+          <Form.Control type="text" placeholder="Username" onChange={this.updateUsername} tabIndex={1} onKeyPress={this.handleKeyPress} autoFocus />
         </Form.Group>
         <Form.Group controlId="formBasicPassword">
-          <Form.Control type="password" placeholder="Password" onChange={this.updatePassword} tabIndex={2} />
+          <Form.Control type="password" placeholder="Password" onChange={this.updatePassword} tabIndex={2} onKeyPress={this.handleKeyPress} />
         </Form.Group>
         <Form.Group style={{overflow: "hidden"}}>
           <Button variant="outline-secondary" onClick={backFn} className="float-left" tabIndex={4}> Cancel </Button>
@@ -72,7 +79,6 @@ class BuildingsLoginForm extends Component {
         </Form.Group>
         <div className="loginErrors">
           {this.state.errors.map( (error, idx) => {
-            console.log(error.response)
             return (
               <Alert key={idx} dismissible variant="danger"> { error.response.message } </Alert>
             )

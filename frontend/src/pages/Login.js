@@ -23,7 +23,7 @@ class MethodSelection extends Component {
         <GithubButton label="With Github" disabled={true} authSuccessCallback={authCallback} />
         <hr />
         <Button variant="outline-secondary" onClick={buildingsFn} block>
-          <i class="far fa-building" /> With Buildings API
+          <i className="far fa-building" /> With Buildings API
         </Button>
       </div>
     )
