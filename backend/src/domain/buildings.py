@@ -7,6 +7,8 @@ from ..errors import ItemNotFound
 class Building(object):
     def __init__(self):
         self.record_id = None
+        self.owner_id = None
+        self.is_public = None
         self.name = None
         self.height = None
         self.city = None
@@ -16,6 +18,8 @@ class Building(object):
     def from_db(cls, rowproxy):
         inst = cls()
         inst.record_id = rowproxy.id
+        inst.owner_id = rowproxy.owner_id
+        inst.is_public = rowproxy.is_public
         inst.name = rowproxy.name
         inst.height = rowproxy.height
         inst.city = rowproxy.city
@@ -25,6 +29,8 @@ class Building(object):
     def as_dict(self):
         return {
             'id': self.record_id,
+            'owner_id': self.owner_id,
+            'is_public': self.is_public,
             'name': self.name,
             'height': self.height,
             'city': self.city,

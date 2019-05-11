@@ -29,13 +29,9 @@ def response_from_error(error):
     return response
 
 def response_with_payload(payload):
-    content = {'success': True, 'response': payload} #account.as_dict()
+    content = {'success': True, 'response': payload}
     response = Response(json.dumps(content), status=200, mimetype='application/json')
     return response
-
-# # Monkey patch the flask Response object with our custom builder functions
-# setattr(Response, 'from_service_exception', serviceexception_to_response)
-# setattr(Response, 'from_payload', payload_to_response)
 
 class BuildingsApi(Flask):
     def __init__(self, app_config):

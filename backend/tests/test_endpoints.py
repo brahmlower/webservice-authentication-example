@@ -56,6 +56,8 @@ response data structures.
 
 """
 
+PUBLIC_USER_ID = 0
+DEFAULT_USER_ID = 1
 DEFAULT_USERNAME = 'bob'
 DEFAULT_PASSWORD = 'burgers'
 
@@ -89,7 +91,7 @@ class TestBuildingsAPIEndpoints(unittest.TestCase):
     def setUp(self):
         self.server_config = build_server_config()
         self.server = BuildingsApi(self.server_config)
-        # self.server.testing = True
+        self.server.testing = True # Not sure what this does for us
         self.client = self.server.test_client()
 
     def tearDown(self):
@@ -118,9 +120,9 @@ class TestBuildingsAPIEndpoints(unittest.TestCase):
         assert 'message' in data.keys()
 
     def test_standard_login_okay(self):
-        response = self._standard_login_request(DEFAULT_USERNAME, DEFAULT_PASSWORD)
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
+        result = self._standard_login_request(DEFAULT_USERNAME, DEFAULT_PASSWORD)
+        self.assertEqual(result.status_code, 200)
+        data = json.loads(result.data)
         self.assertTrue(data.get('success'))
         self.assertTrue('token' in data['response'].keys())
 
@@ -150,24 +152,75 @@ class TestBuildingsAPIEndpoints(unittest.TestCase):
     # /api/buildings tests
 
     def test_list_buildings_okay(self):
+        num_expected_results = 9
         bearer_token = self._standard_login()
-        response = self.client.get('/api/buildings', headers={'Authorization': bearer_token})
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
+        result = self.client.get('/api/buildings', headers={'Authorization': bearer_token})
+        self.assertEqual(result.status_code, 200)
+        data = json.loads(result.data)
         self.assertTrue(data.get('success'))
-        self.assertTrue( len(data.get('response')) > 0 )
+        self.assertEqual(len(data.get('response')), num_expected_results)
 
     def test_list_buildings_unauthed(self):
-        response = self.client.get('/api/buildings')
-        self.assertEqual(response.status_code, 400)
-        data = json.loads(response.data)
+        result = self.client.get('/api/buildings')
+        self.assertEqual(result.status_code, 400)
+        data = json.loads(result.data)
         self.assertFalse(data.get('success'))
         self.assertEqual(data.get('response').get('error'), 'MissingRequiredHeader')
+
+    def test_list_buildings_public_only(self):
+        """ Test user cannot see buildings owned by other accounts that are not marked public """
+        bearer_token = self._standard_login()
+        result = self.client.get('/api/buildings', headers={'Authorization': bearer_token})
+        self.assertEqual(result.status_code, 200)
+        data = json.loads(result.data)
+        for i in data.get('response'):
+            self.assertIn(i['owner_id'], [PUBLIC_USER_ID])
 
     # /api/buildings/<id> tests
 
     def test_get_building_okay(self):
-        pass
+        """ Test user can get a public building successfully """
+        building_id = 1
+        bearer_token = self._standard_login()
+        result = self.client.get('/api/buildings/{}'.format(building_id), headers={'Authorization': bearer_token})
+        self.assertEqual(result.status_code, 200)
+        data = json.loads(result.data)
+        response = data.get('response')
+        self.assertTrue(data.get('success'))
+        self.assertIn('id', response.keys())
+        self.assertEqual(response.get('id'), building_id)
+        self.assertEqual(response.get('owner_id'), PUBLIC_USER_ID)
+        self.assertTrue(response.get('is_public'))
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_get_building_unauthed(self):
+        """ Test user cannot get public building without being authenticated """
+        building_id = 1
+        result = self.client.get('/api/buildings/{}'.format(building_id))
+        self.assertEqual(result.status_code, 400)
+        data = json.loads(result.data)
+        self.assertFalse(data.get('success'))
+        self.assertEqual(data.get('response').get('error'), 'MissingRequiredHeader')
+
+    def test_get_building_not_public_not_owned(self):
+        """ Test user cannot get a private building owned by another user """
+        building_id = 11
+        bearer_token = self._standard_login()
+        result = self.client.get('/api/buildings/{}'.format(building_id), headers={'Authorization': bearer_token})
+        self.assertEqual(result.status_code, 400)
+        data = json.loads(result.data)
+        self.assertFalse(data.get('success'))
+        self.assertEqual(data.get('response').get('error'), 'ItemNotFound')
+
+    def test_get_building_not_public_is_owned(self):
+        """ Test user can get private building owned by themselves """
+        building_id = 11
+        owner_id = 2
+        username = 'tina'
+        password = 'zombies'
+        bearer_token = self._standard_login(username=username, password=password)
+        result = self.client.get('/api/buildings/{}'.format(building_id), headers={'Authorization': bearer_token})
+        response = json.loads(result.data).get('response')
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(response.get('id'), building_id)
+        self.assertEqual(response.get('owner_id'), owner_id)
+        self.assertFalse(response.get('is_public'))

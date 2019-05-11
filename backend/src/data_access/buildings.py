@@ -7,7 +7,7 @@ from ..errors import DatabaseError
 
 def list_buildings(engine):
     """ Gets all buildings from the database """
-    sql = text("SELECT id, name, height, city, country FROM buildings ORDER BY id")
+    sql = text("SELECT id, owner_id, is_public, name, height, city, country FROM buildings ORDER BY id")
     try:
         result = engine.execute(sql)
         return result.fetchall()
@@ -20,7 +20,7 @@ def list_buildings(engine):
 
 def get_building(engine, building_id):
     """ Gets a specific building from the database """
-    sql = text("SELECT id, name, height, city, country FROM buildings WHERE id = :building_id")
+    sql = text("SELECT id, owner_id, is_public, name, height, city, country FROM buildings WHERE id = :building_id")
     try:
         result = engine.execute(sql, {'building_id': building_id})
         return result.fetchone()
