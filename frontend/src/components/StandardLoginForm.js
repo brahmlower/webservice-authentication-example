@@ -35,15 +35,15 @@ class BuildingsLoginForm extends Component {
     }
   }
 
-  successCallbackWrapper (response) {
+  successCallbackWrapper (appResponse) {
     // Do some internal state processing if desired
     // Now call the success callback
-    this.props.authSuccessCallback(response);
+    this.props.authSuccessCallback(appResponse.response);
   }
 
-  apiFailure (response) {
+  apiFailure (appResponse) {
     let errorList = this.state.errors
-    errorList.push(response)
+    errorList.push(appResponse.response)
     this.setState({ errors: errorList })
   }
 
@@ -80,7 +80,7 @@ class BuildingsLoginForm extends Component {
         <div className="loginErrors">
           {this.state.errors.map( (error, idx) => {
             return (
-              <Alert key={idx} dismissible variant="danger"> { error.response.message } </Alert>
+              <Alert key={idx} dismissible variant="danger"> { error.message } </Alert>
             )
           })}
         </div>
