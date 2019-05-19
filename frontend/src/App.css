@@ -19,10 +19,6 @@
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
@@ -30,4 +26,9 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.active a{
+  background-color: #4990F3 !important;
+  border-color: #4990F3 !important;
 }

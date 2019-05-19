@@ -1,0 +1,32 @@
+
+.card-img-top {
+    width: 100%;
+    height: 15vw;
+    object-fit: cover;
+}
+
+.favoriteButton {
+    float: right;
+}
+
+.dashboardSection {
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 25px;
+    padding-bottom: 25px;
+}
+
+.dashboardSection > h3 {
+    margin: 10px;
+}
+
+.buildingCardRow {
+    flex-flow: row;
+    overflow-x: auto;
+}
+
+.buildingCard {
+    max-width: 20rem;
+    min-width: 20rem;
+    display: flex;
+}

@@ -1,0 +1,14 @@
+
+.pageContent {
+    height: calc(100vh - 56px);
+}
+
+.sideNavBar {
+    padding: 15px;
+    background-color: #f8f9fa;
+}
+
+.contentPane {
+    padding: 15px;
+    background-color: #e9ecef;
+}
