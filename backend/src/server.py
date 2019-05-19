@@ -87,8 +87,8 @@ class BuildingsApi(Flask):
             jwt_payload = verify_auth_jwt(raw_jwt, jwt_secret, jwt_algo)
             account_id = jwt_payload.get('id')
             if account_id is None:
-                abort(400)
-                # raise Exception('Bad token payload')
+                # abort(400)
+                raise Exception('Bad token payload')
             # We verified the jwt, so now prepare the database session
             session = self.Session(autoflush=True)
             set_session_account_id(session, account_id)
