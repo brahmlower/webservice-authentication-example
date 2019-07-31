@@ -23,5 +23,8 @@ setup(
         'console_scripts': [
             'buildings-api=buildings_api:main'
         ]
-    }
+    },
+    classifiers = [
+        "License :: OSI Approved :: MIT License"
+    ]
 )
