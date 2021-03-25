@@ -11,7 +11,7 @@ setup(
     package_dir = {'buildings_api': 'src'},
     install_requires = [
         'Flask==1.0.2',
-        'PyYAML==5.1.1',
+        'PyYAML==5.4',
         'psycopg2-binary==2.7.7',
         'pyjwt==1.7.1',
         'flask-sqlalchemy==2.3.2',
