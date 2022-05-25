@@ -13,7 +13,7 @@ setup(
         'Flask==1.0.2',
         'PyYAML==5.1.1',
         'psycopg2-binary==2.7.7',
-        'pyjwt==1.7.1',
+        'pyjwt==2.4.0',
         'flask-sqlalchemy==2.3.2',
         'google-auth==1.6.3',
         'requests==2.21.0',
